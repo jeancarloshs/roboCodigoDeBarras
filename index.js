@@ -4,7 +4,7 @@ const fs = require('fs');
 
 let chrome = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
 let userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.181 Safari/537.36';
-let urlComosBlueSoft = 'https://cosmos.bluesoft.com.br/gpcs/cuidados-com-o-bebe-54000000/produtos?page=1'; 
+let urlComosBlueSoft = 'https://cosmos.bluesoft.com.br/gpcs/calcados-63000000/produtos?page=1'; 
 // let nomeCategoria = document.querySelectorAll('.page-header > a');
 let arrayJson = []
 

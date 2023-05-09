@@ -1,0 +1,6 @@
+[
+  {
+    "url": "https://cosmos.bluesoft.com.br/produtos/7891235610019",
+    "erro": "Waiting for selector `.page-header` failed: Runtime.callFunctionOn timed out. Increase the 'protocolTimeout' setting in launch/connect calls for a higher timeout if needed."
+  }
+]
