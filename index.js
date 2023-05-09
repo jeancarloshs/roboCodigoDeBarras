@@ -21,7 +21,7 @@ objeto.forEach(element => {
 async function salvaRelatorio() {
   const navegador = await puppeteer.launch({    
     executablePath: chrome,  
-    headless: false,
+    headless: 'new',
     defaultViewport: null,
   });
 
@@ -31,36 +31,37 @@ async function salvaRelatorio() {
 // })();
 
   let arrayJson = [];
+  let arrayErros = []; // array para armazenar os erros
   
 for(let i = 0; i < listaUrl.length; i++) {
   setTimeout(async function(){
     //console.log(listaUrl[i])
+    try {
       const pagina = await navegador.newPage();
       await pagina.goto(listaUrl[i]);
       // await pagina.click('.accept-cookies-button');
       await pagina.setUserAgent(userAgent);
-      await pagina.waitForSelector('.page-header');
+      await pagina.waitForSelector('.page-header', { timeout: 1200000 });
 
       // desce a página 5 vezes para carregar mais produtos
       for (let j = 0; j < 1; j++) {
         await pagina.evaluate(() => {
           window.scrollBy(0, window.innerHeight);
         });
-        await pagina.waitForTimeout(3000);
+        await pagina.waitForTimeout(500);
       }
 
       const data = await pagina.evaluate(() => {
-        //const listaCanais = document.querySelector('.tv__player-channels > a', el => el.map(link => link.href));
-        const listaProdutos = document.querySelectorAll('.dl-horizontal');
+        const listaProdutos = document.querySelectorAll('.main');
         const produtosArray = [...listaProdutos];
       
         const produtos = produtosArray.map((produto) => {
-          const imagem = produto.querySelector('.thumbnail-container');
-          const nome = produto.querySelector('.description');
-          const gtin = produto.querySelector('.barcode');
+          const imagem = produto.querySelector('#product-gallery > .product-thumbnail > img');
+          const nome = produto.querySelector('#product_description');
+          const gtin = produto.querySelector('#product_gtin');
           const categoriaProduto = produto.querySelector('.gpc-name');
           const marcaDoProduto = produto.querySelector('.brand-name');
-          const valorMedio = produto.querySelector('.description');
+          const valorMedio = produto.querySelector('.dl-horizontal dd:last-child');
           
           return {
             imagem: imagem ? imagem.src : null,
@@ -76,13 +77,27 @@ for(let i = 0; i < listaUrl.length; i++) {
       });
 
       arrayJson.push(...data)
-      console.log('res', arrayJson);
+      console.log('res', [i]);
+
       // Tempo para fechar a ultima aba aberta, desta forma economizamos memoria ram
       setTimeout(async function(){
+        fs.writeFileSync('listaProdutos.json', JSON.stringify(arrayJson, null, 2), err => {
+          if(err) throw new Error ('Algo deu errado')
+          console.log('Tudo certo!!!')
+        });
         await pagina.close()
-      },7000) 
+      },1500)
       return
-    },i*7000); 
+    } catch (error) {
+      console.error(`Erro na extração de dados da URL ${listaUrl[i]}.`, error);
+      arrayErros.push({url: listaUrl[i], erro: error.message}); // adiciona o erro ao array de erros
+      // se este for o último loop, escreve o array de erros em um arquivo JSON separado
+      fs.writeFileSync('erros.json', JSON.stringify(arrayErros, null, 2), err => {
+        if(err) throw new Error ('Algo deu errado')
+        console.log('Erros salvos em erros.json')
+      });
+    }
+    },i*1500); 
   };
 };
 salvaRelatorio();
