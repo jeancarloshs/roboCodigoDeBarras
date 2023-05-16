@@ -25,11 +25,6 @@ async function salvaRelatorio() {
     defaultViewport: null,
   });
 
-// (async () => {
-//   await pagina.click('.btn-success');
-//   await pagina.waitForTimeout(1000);
-// })();
-
   let arrayJson = [];
   let arrayErros = []; // array para armazenar os erros
   
@@ -43,7 +38,7 @@ for(let i = 0; i < listaUrl.length; i++) {
       await pagina.setUserAgent(userAgent);
       await pagina.waitForSelector('.page-header', { timeout: 1200000 });
 
-      // desce a página 5 vezes para carregar mais produtos
+      // desce a página 1 vez para carregar mais produtos
       for (let j = 0; j < 1; j++) {
         await pagina.evaluate(() => {
           window.scrollBy(0, window.innerHeight);
@@ -52,6 +47,31 @@ for(let i = 0; i < listaUrl.length; i++) {
       }
 
       const data = await pagina.evaluate(() => {
+        function calcularValorMedio(valor) {
+          if (valor === null || valor === undefined) {
+            return null;
+          }
+        
+          // Verifica se o valor é uma string contendo um único valor numérico
+          const valorNumerico = Number.parseFloat(valor.replace(/[^\d,.]/g, '').replace(',', '.')); // Remove todos os caracteres que não sejam dígitos, vírgula e ponto
+          if (!isNaN(valorNumerico)) {
+            return valorNumerico.toFixed(2);
+          }
+        
+          // Verifica se o valor é uma string contendo um intervalo de valores
+          const valores = valor.split(' a ');
+          if (valores.length === 2) {
+            const valor1 = Number.parseFloat(valores[0].replace(/[^\d,.]/g, '').replace(',', '.'));
+            const valor2 = Number.parseFloat(valores[1].replace(/[^\d,.]/g, '').replace(',', '.'));
+            if (!isNaN(valor1) && !isNaN(valor2)) {
+              return (valor1 + valor2) / 2;
+            }
+          }
+
+          // Se chegou aqui, significa que o valor não é numérico nem um intervalo de valores
+          return null;
+        }
+        
         const listaProdutos = document.querySelectorAll('.main');
         const produtosArray = [...listaProdutos];
       
@@ -62,6 +82,7 @@ for(let i = 0; i < listaUrl.length; i++) {
           const categoriaProduto = produto.querySelector('.gpc-name');
           const marcaDoProduto = produto.querySelector('.brand-name');
           const valorMedio = produto.querySelector('.dl-horizontal dd:last-child');
+          const valorMedioCalculado = calcularValorMedio(valorMedio ? valorMedio.innerText : null);
           
           return {
             imagem: imagem ? imagem.src : null,
@@ -69,7 +90,7 @@ for(let i = 0; i < listaUrl.length; i++) {
             gtin: gtin ? gtin.innerText : null,
             categoriaProduto: categoriaProduto ? categoriaProduto.innerText : null,
             marcaDoProduto: marcaDoProduto ? marcaDoProduto.innerText : null,
-            valorMedio: valorMedio ? valorMedio.innerText : null,
+            valorMedio: valorMedioCalculado,
           };
         });
         
